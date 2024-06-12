@@ -1,0 +1,37 @@
+---
+name: "Setup groff (GNU roff)"
+author: Yevhen Fabizhevskyi
+description: "This action sets up groff (GNU roff)."
+branding:
+  icon: terminal
+  color: gray-dark
+runs:
+  using: "composite"
+  steps:
+    - name: Fail
+      if: ${{ runner.os == 'Windows' }}
+      run: echo "::error::${RUNNER_OS} ${RUNNER_ARCH} is not supported" && exit 1
+      shell: sh
+    - name: Collect info
+      id: info
+      run: |
+        installed=$(if command -v groff >/dev/null 2>&1; then echo true; else echo false; fi)
+        echo "installed=${installed}" >> "$GITHUB_OUTPUT"
+      shell: sh
+    - name: Install groff (Linux)
+      if: ${{ steps.info.outputs.installed == 'false' }}
+      run: |
+        apt-get update
+        apt-get install groff -y
+      shell: sh
+    - name: Install groff (macOS)
+      if: ${{ steps.info.outputs.installed == 'false' }}
+      run: |
+        if ! command -v brew >/dev/null 2>&1; then
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        fi
+        brew install groff
+      shell: sh
+    - name: Print groff version
+      run: groff --version
+      shell: sh
