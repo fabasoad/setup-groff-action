@@ -19,13 +19,13 @@ runs:
         echo "installed=${installed}" >> "$GITHUB_OUTPUT"
       shell: sh
     - name: Install groff (Linux)
-      if: ${{ steps.info.outputs.installed == 'false' }}
+      if: ${{ steps.info.outputs.installed == 'false' && runner.os == 'Linux' }}
       run: |
         apt-get update
         apt-get install groff -y
       shell: sh
     - name: Install groff (macOS)
-      if: ${{ steps.info.outputs.installed == 'false' }}
+      if: ${{ steps.info.outputs.installed == 'false' && runner.os == 'macOS' }}
       run: |
         if ! command -v brew >/dev/null 2>&1; then
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
