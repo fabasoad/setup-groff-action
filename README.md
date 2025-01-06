@@ -11,16 +11,30 @@ This action sets up [groff (GNU roff)](https://www.gnu.org/software/groff).
 ## Prerequisites
 
 <!-- prettier-ignore-start -->
-| OS      | Supported | Tools            |
-|---------|-----------|------------------|
-| Linux   | Yes       | None             |
-| macOS   | Yes       | `brew` or `bash` |
-| Windows | No        | N/A              |
+| OS      | Supported          | Tools  |
+|---------|--------------------|--------|
+| Linux   | :white_check_mark: | None   |
+| macOS   | :white_check_mark: | `brew` |
+| Windows | :x:                | N/A    |
 <!-- prettier-ignore-end -->
 
 ## Inputs
 
-None
+```yaml
+- uses: fabasoad/setup-groff-action@v0
+  with:
+    # (Optional) If "true" it installs groff even if it is already installed on
+    # a runner. Otherwise, skips installation. Defaults to "false".
+    force: "false"
+```
+
+## Outputs
+
+<!-- prettier-ignore-start -->
+| Name      | Description                        | Example |
+|-----------|------------------------------------|---------|
+| installed | Whether groff was installed or not | `true`  |
+<!-- prettier-ignore-end -->
 
 ## Example
 
@@ -38,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: fabasoad/setup-groff-action@v1
+      - uses: fabasoad/setup-groff-action@v0
       - run: groff -man -Tascii hello.roff
 ```
 

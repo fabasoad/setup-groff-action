@@ -4,39 +4,106 @@ name: Functional Tests
 on: # yamllint disable-line rule:truthy
   pull_request:
     paths:
-      - "action.yml"
-      - ".github/workflows/functional-tests.yml"
+      - .github/workflows/functional-tests.yml
+      - src/**
+      - action.yml
   push:
     branches:
-      - "main"
+      - main
+  schedule:
+    # Every Friday at 09:00 JST
+    - cron: "0 0 * * 5"
+  workflow_dispatch: {}
 
 defaults:
   run:
     shell: sh
 
 jobs:
-  run-script:
-    name: Run script
+  setup-groff:
+    name: Setup groff
+    runs-on: ${{ matrix.os }}-latest
     timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu", "macos", "windows"]
-    runs-on: ${{ matrix.os }}-latest
+        os: ["macos"]
     steps:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
       - name: Setup groff
         id: setup-groff
-        continue-on-error: ${{ matrix.os == 'windows' }}
         uses: ./
-      - name: Run script
-        if: matrix.os != 'windows'
-        run: groff -man -Tascii ./hello-world.roff
-      - name: Expect the previous step to fail
-        if: matrix.os == 'windows'
+      - name: Test action completion
         run: |
-          if [ "${{ steps.setup-groff.outcome }}" != "failure" ]; then
-            echo "::error::Previous step should have failed but didn't"
-            exit 1
-          fi
+          test_equal() {
+            if [ "${2}" != "${3}" ]; then
+              echo "::error title=${1}::Expected: ${3}. Actual: ${2}."
+              exit 1
+            fi
+          }
+          test_equal "groff should be installed" \
+            "${{ steps.setup-groff.outputs.installed }}" \
+            "true"
+      - name: Run script
+        run: groff -man -Tascii ./hello-world.roff
+
+  setup-groff-in-container:
+    name: Setup groff in container (ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    container:
+      image: ubuntu:25.04
+    steps:
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
+      - name: Setup groff
+        id: setup-groff
+        uses: ./
+      - name: Test action completion
+        run: |
+          test_equal() {
+            if [ "${2}" != "${3}" ]; then
+              echo "::error title=${1}::Expected: ${3}. Actual: ${2}."
+              exit 1
+            fi
+          }
+          test_equal "groff should be installed" \
+            "${{ steps.setup-groff.outputs.installed }}" \
+            "true"
+      - name: Run script
+        run: groff -man -Tascii ./hello-world.roff
+
+  test-force:
+    name: Test force
+    runs-on: macos-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        force: ["true", "false"]
+    steps:
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
+      - name: Setup groff 1
+        id: setup-groff-1
+        uses: ./
+      - name: Setup groff 2
+        id: setup-groff-2
+        uses: ./
+        with:
+          force: ${{ matrix.force }}
+      - name: Test action completion
+        run: |
+          test_equal() {
+            if [ "${2}" != "${3}" ]; then
+              echo "::error title=${1}::Expected: ${3}. Actual: ${2}."
+              exit 1
+            fi
+          }
+          test_equal "Wrong \"installed\" output from setup-groff-1" \
+            "${{ steps.setup-groff-1.outputs.installed }}" \
+            "true"
+          test_equal "Wrong \"installed\" output from setup-groff-2" \
+            "${{ steps.setup-groff-2.outputs.installed }}" \
+            "${{ matrix.force }}"

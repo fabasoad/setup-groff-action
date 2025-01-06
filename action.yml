@@ -5,33 +5,47 @@ description: "This action sets up groff (GNU roff)."
 branding:
   icon: terminal
   color: gray-dark
+inputs:
+  force:
+    description: |
+      If "false" skips installation if groff is already installed. If "true"
+      installs groff in any case. Defaults to "false".
+    required: false
+    default: "false"
+outputs:
+  installed:
+    description: Whether groff was installed or not.
+    value: "${{ steps.install-groff.outcome == 'success' }}"
 runs:
   using: "composite"
   steps:
     - name: Fail
       if: ${{ runner.os == 'Windows' }}
-      run: echo "::error::${RUNNER_OS} ${RUNNER_ARCH} is not supported" && exit 1
+      run: |
+        echo "::error title=OS is not supported::${RUNNER_OS} ${RUNNER_ARCH} is not supported"
+        exit 1
       shell: sh
+
     - name: Collect info
       id: info
-      run: |
-        installed=$(if command -v groff >/dev/null 2>&1; then echo true; else echo false; fi)
-        echo "installed=${installed}" >> "$GITHUB_OUTPUT"
+      env:
+        INPUT_FORCE: "${{ inputs.force }}"
+      run: ./collect-info.sh "${INPUT_FORCE}"
       shell: sh
-    - name: Install groff (Linux)
-      if: ${{ steps.info.outputs.installed == 'false' && runner.os == 'Linux' }}
+      working-directory: "${{ github.action_path }}/src"
+
+    - name: Install groff
+      if: ${{ steps.info.outputs.bin-installed == 'false' }}
+      id: install-groff
       run: |
-        apt-get update
-        apt-get install groff -y
-      shell: sh
-    - name: Install groff (macOS)
-      if: ${{ steps.info.outputs.installed == 'false' && runner.os == 'macOS' }}
-      run: |
-        if ! command -v brew >/dev/null 2>&1; then
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          apt-get update
+          apt-get install groff -y
+        else
+          brew install groff
         fi
-        brew install groff
       shell: sh
-    - name: Print groff version
+
+    - name: Print version
       run: groff --version
       shell: sh
