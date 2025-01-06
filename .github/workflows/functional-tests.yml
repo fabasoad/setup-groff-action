@@ -22,12 +22,38 @@ defaults:
 jobs:
   setup-groff:
     name: Setup groff
+    runs-on: ${{ matrix.os }}-latest
     timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu", "macos"]
-    runs-on: ${{ matrix.os }}-latest
+        os: ["macos"]
+    steps:
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
+      - name: Setup groff
+        id: setup-groff
+        uses: ./
+      - name: Test action completion
+        run: |
+          test_equal() {
+            if [ "${2}" != "${3}" ]; then
+              echo "::error title=${1}::Expected: ${3}. Actual: ${2}."
+              exit 1
+            fi
+          }
+          test_equal "groff should be installed" \
+            "${{ steps.setup-groff.outputs.installed }}" \
+            "true"
+      - name: Run script
+        run: groff -man -Tascii ./hello-world.roff
+
+  setup-groff-in-container:
+    name: Setup groff in container (ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    container:
+      image: ubuntu:25.04
     steps:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v4
@@ -48,9 +74,10 @@ jobs:
             "true"
       - name: Run script
         run: groff -man -Tascii ./hello-world.roff
+
   test-force:
     name: Test force
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 5
     strategy:
       fail-fast: false
