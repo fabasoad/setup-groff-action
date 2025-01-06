@@ -61,7 +61,6 @@ jobs:
         id: setup-groff
         uses: ./
       - name: Test action completion
-        if: ${{ matrix.os != 'Windows' }}
         run: |
           test_equal() {
             if [ "${2}" != "${3}" ]; then
