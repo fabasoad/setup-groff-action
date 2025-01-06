@@ -34,16 +34,16 @@ runs:
       shell: sh
       working-directory: "${{ github.action_path }}/src"
 
-    - name: Install groff (Linux)
-      if: ${{ steps.info.outputs.bin-installed == 'false' && runner.os == 'Linux' }}
+    - name: Install groff
+      if: ${{ steps.info.outputs.bin-installed == 'false' }}
+      id: install-groff
       run: |
-        apt-get update
-        apt-get install groff -y
-      shell: sh
-
-    - name: Install groff (macOS)
-      if: ${{ steps.info.outputs.bin-installed == 'false' && runner.os == 'macOS' }}
-      run: brew install groff
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          apt-get update
+          apt-get install groff -y
+        else
+          brew install groff
+        fi
       shell: sh
 
     - name: Print version
