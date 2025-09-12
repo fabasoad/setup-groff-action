@@ -51,7 +51,7 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: fabasoad/setup-groff-action@v0
       - run: groff -man -Tascii hello.roff
 ```
@@ -78,3 +78,7 @@ EXAMPLES
 
 Hello Manual                       June 2024                          HELLO(1)
 ```
+
+## Contributions
+
+![Alt](https://repobeats.axiom.co/api/embed/bad0e7e13e0dbf910bcea7d53b0d361fdffe6d6f.svg "Repobeats analytics image")
