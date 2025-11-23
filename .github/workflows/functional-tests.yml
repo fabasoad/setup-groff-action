@@ -27,7 +27,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos", "ubuntu"]
+        # ubuntu is missing here because groff is already installed on ubuntu-latest
+        # runner. Hence, steps.setup-groff.outputs.installed will always be "false".
+        os: ["macos"]
     steps:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v5
