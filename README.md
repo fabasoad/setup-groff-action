@@ -51,7 +51,7 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: fabasoad/setup-groff-action@v0
       - run: groff -man -Tascii hello.roff
 ```
